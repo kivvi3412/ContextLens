@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}ContextLens - AI Translation & Analysis{% endblock %}
+
+{% block content %}
+    <div class="main-layout">
+        <!-- Left Panel - Input -->
+        <div class="left-panel">
+            <div class="input-container">
+                <div class="input-header">
+                    <h2>Input Text</h2>
+                    <div class="input-actions">
+                        <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                        <button id="translateBtn" class="btn btn-primary">Translate</button>
+                    </div>
+                </div>
+                <textarea
+                        id="inputText"
+                        class="input-textarea"
+                        placeholder="Enter English text or paragraph here..."
+                        spellcheck="false"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Right Panel - Translation & Analysis -->
+        <div class="right-panel">
+            <!-- Translation Section -->
+            <div class="panel-section translation-section">
+                <div class="section-header" id="translationHeader">
+                    <div class="header-left">
+                        <h3>Translation</h3>
+                        <div id="translationLoading" class="loading-indicator-inline hidden">
+                            <div class="loading-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div id="translationThinking" class="thinking-content">Translating...</div>
+                        </div>
+                    </div>
+                    <button class="collapse-btn" id="translationCollapseBtn">
+                        <span class="collapse-icon">−</span>
+                    </button>
+                </div>
+                <div class="section-content" id="translationContent">
+                    <div class="output-container">
+                        <div id="translationOutput" class="output-text">
+                            Translation will appear here...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="panel-section analysis-section">
+                <div class="section-header" id="analysisHeader">
+                    <div class="header-left">
+                        <h3>Word Analysis</h3>
+                        <div id="analysisLoading" class="loading-indicator-inline hidden">
+                            <div class="loading-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div id="analysisThinking" class="thinking-content">Analyzing...</div>
+                        </div>
+                    </div>
+                    <button class="collapse-btn" id="analysisCollapseBtn">
+                        <span class="collapse-icon">−</span>
+                    </button>
+                </div>
+                <div class="section-content" id="analysisContent">
+                    <div class="output-container">
+                        <div id="analysisOutput" class="output-text markdown-content">
+                            Select a word or phrase in the input text to see detailed analysis...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/main.js' %}"></script>
+{% endblock %}
