@@ -22,4 +22,7 @@ urlpatterns = [
     # Prompt Template CRUD
     path('api/templates/', views.PromptTemplateView.as_view(), name='prompt_templates_list'),
     path('api/templates/<int:template_id>/', views.PromptTemplateView.as_view(), name='prompt_templates_detail'),
+
+    # Analysis Configuration
+    path('api/analysis-config/', views.AnalysisConfigurationView.as_view(), name='analysis_config'),
 ]

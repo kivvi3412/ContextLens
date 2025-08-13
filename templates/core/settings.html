@@ -46,6 +46,33 @@
             </div>
         </div>
 
+        <!-- Analysis Configuration Section -->
+        <div class="settings-section">
+            <div class="section-header">
+                <h2>Analysis Configuration</h2>
+                <p>Configure word group and sentence analysis thresholds</p>
+            </div>
+
+            <div class="config-card" id="analysisConfigCard">
+                <div class="config-header">
+                    <h3>Text Analysis Settings</h3>
+                    <div class="config-actions">
+                        <button class="btn btn-secondary btn-sm" id="editAnalysisConfigBtn">Edit</button>
+                    </div>
+                </div>
+                <div class="config-details">
+                    <div class="detail-item">
+                        <span class="label">Word Group Threshold:</span>
+                        <span class="value" id="wordGroupThresholdValue">{{ analysis_config.word_group_threshold }} words or fewer</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Current Logic:</span>
+                        <span class="value">≤{{ analysis_config.word_group_threshold }} words = Word/Phrase Analysis, >{{ analysis_config.word_group_threshold }} words = Sentence Analysis</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Translation Templates Section -->
         <div class="settings-section">
             <div class="section-header">
@@ -172,6 +199,42 @@
                         <p>No sentence analysis templates found. Add one to get started.</p>
                     </div>
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Configuration Modal -->
+    <div id="analysisConfigModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Analysis Configuration</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="analysisConfigForm" class="modal-body">
+                <div class="form-group">
+                    <label for="wordGroupThreshold">Word Group Threshold</label>
+                    <input type="number" id="wordGroupThreshold" name="word_group_threshold" min="1" max="50" required onchange="updateThresholdPreview()">
+                    <small class="form-text">Number of words or fewer that will be analyzed as word/phrase (currently {{ analysis_config.word_group_threshold }})</small>
+                </div>
+                <div class="form-help">
+                    <h4>How it works:</h4>
+                    <p>When you select text in the input area:</p>
+                    <ul>
+                        <li>If selection has ≤ <strong id="thresholdPreview">{{ analysis_config.word_group_threshold }}</strong> words: <strong>Word/Phrase Analysis</strong></li>
+                        <li>If selection has > <strong id="thresholdPreview2">{{ analysis_config.word_group_threshold }}</strong> words: <strong>Sentence Analysis</strong></li>
+                    </ul>
+                    <script>
+                        function updateThresholdPreview() {
+                            const threshold = document.getElementById('wordGroupThreshold').value;
+                            document.getElementById('thresholdPreview').textContent = threshold;
+                            document.getElementById('thresholdPreview2').textContent = threshold;
+                        }
+                    </script>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelAnalysisConfigBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" form="analysisConfigForm">Save</button>
             </div>
         </div>
     </div>

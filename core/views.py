@@ -7,7 +7,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from .models import APIConfiguration, PromptTemplate
+from .models import APIConfiguration, PromptTemplate, AnalysisConfiguration
 from .openai_service import get_active_templates, create_openai_service
 
 
@@ -22,12 +22,14 @@ def settings_view(request):
     translation_templates = PromptTemplate.objects.filter(template_type='translation')
     analysis_templates = PromptTemplate.objects.filter(template_type='word_analysis')
     sentence_templates = PromptTemplate.objects.filter(template_type='sentence_analysis')
+    analysis_config = AnalysisConfiguration.get_current()
 
     context = {
         'api_configs': api_configs,
         'translation_templates': translation_templates,
         'analysis_templates': analysis_templates,
         'sentence_templates': sentence_templates,
+        'analysis_config': analysis_config,
     }
     return render(request, 'core/settings.html', context)
 
@@ -165,10 +167,11 @@ def stream_word_analysis(request):
             return JsonResponse({'error': 'No text or selection provided'}, status=400)
 
         templates = get_active_templates()
+        analysis_config = AnalysisConfiguration.get_current()
         selected_words = len(selected_text.split())
         
-        # 判断是句子(>4个单词)还是词汇/短语(<=4个单词)
-        if selected_words > 4:
+        # 使用配置的阈值判断是句子还是词汇/短语
+        if selected_words > analysis_config.word_group_threshold:
             # 句子分析
             if 'sentence_analysis' not in templates:
                 return JsonResponse(
@@ -187,7 +190,7 @@ def stream_word_analysis(request):
         def generate_stream():
             try:
                 chunk_count = 0
-                for chunk in service.stream_word_analysis_sync(template, all_text, selected_text, selected_words > 4):
+                for chunk in service.stream_word_analysis_sync(template, all_text, selected_text, selected_words > analysis_config.word_group_threshold):
                     chunk_count += 1
                     
                     # Debug log
@@ -395,6 +398,35 @@ class PromptTemplateView(View):
             return JsonResponse({
                 'status': 'success',
                 'message': 'Prompt template deleted successfully'
+            })
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AnalysisConfigurationView(View):
+    """CRUD operations for analysis configuration"""
+
+    def get(self, request):
+        config = AnalysisConfiguration.get_current()
+        return JsonResponse({
+            'id': config.id,
+            'word_group_threshold': config.word_group_threshold,
+            'sentence_threshold': config.sentence_threshold,
+        })
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            config = AnalysisConfiguration.get_current()
+            
+            config.word_group_threshold = data.get('word_group_threshold', config.word_group_threshold)
+            config.sentence_threshold = data.get('sentence_threshold', config.sentence_threshold)
+            config.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Analysis configuration updated successfully'
             })
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)

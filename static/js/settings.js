@@ -24,16 +24,19 @@ class SettingsManager {
         // Modal elements
         this.apiConfigModal = document.getElementById('apiConfigModal');
         this.templateModal = document.getElementById('templateModal');
+        this.analysisConfigModal = document.getElementById('analysisConfigModal');
 
         // Forms
         this.apiConfigForm = document.getElementById('apiConfigForm');
         this.templateForm = document.getElementById('templateForm');
+        this.analysisConfigForm = document.getElementById('analysisConfigForm');
 
         // Buttons
         this.addApiConfigBtn = document.getElementById('addApiConfigBtn');
         this.addTranslationTemplateBtn = document.getElementById('addTranslationTemplateBtn');
         this.addAnalysisTemplateBtn = document.getElementById('addAnalysisTemplateBtn');
         this.addSentenceTemplateBtn = document.getElementById('addSentenceTemplateBtn');
+        this.editAnalysisConfigBtn = document.getElementById('editAnalysisConfigBtn');
 
         // Modal controls
         this.apiConfigModalTitle = document.getElementById('apiConfigModalTitle');
@@ -56,12 +59,14 @@ class SettingsManager {
         this.addTranslationTemplateBtn.addEventListener('click', () => this.showTemplateModal('translation'));
         this.addAnalysisTemplateBtn.addEventListener('click', () => this.showTemplateModal('word_analysis'));
         if (this.addSentenceTemplateBtn) {
-            this.addSentenceTemplateBtn.addEventListener('click', () => this.showTemplateModal('sentence_analysis'));
+        this.addSentenceTemplateBtn.addEventListener('click', () => this.showTemplateModal('sentence_analysis'));
         }
+        this.editAnalysisConfigBtn.addEventListener('click', () => this.showAnalysisConfigModal());
 
         // Form submissions
         this.apiConfigForm.addEventListener('submit', (e) => this.handleApiConfigSubmit(e));
         this.templateForm.addEventListener('submit', (e) => this.handleTemplateSubmit(e));
+        this.analysisConfigForm.addEventListener('submit', (e) => this.handleAnalysisConfigSubmit(e));
 
         // Modal close buttons
         document.querySelectorAll('.modal-close').forEach(btn => {
@@ -71,6 +76,7 @@ class SettingsManager {
         // Cancel buttons
         document.getElementById('cancelApiConfigBtn').addEventListener('click', () => this.closeModal(this.apiConfigModal));
         document.getElementById('cancelTemplateBtn').addEventListener('click', () => this.closeModal(this.templateModal));
+        document.getElementById('cancelAnalysisConfigBtn').addEventListener('click', () => this.closeModal(this.analysisConfigModal));
 
         // Click outside to close modal
         this.apiConfigModal.addEventListener('click', (e) => {
@@ -78,6 +84,9 @@ class SettingsManager {
         });
         this.templateModal.addEventListener('click', (e) => {
             if (e.target === this.templateModal) this.closeModal(this.templateModal);
+        });
+        this.analysisConfigModal.addEventListener('click', (e) => {
+            if (e.target === this.analysisConfigModal) this.closeModal(this.analysisConfigModal);
         });
 
         // Card action buttons
@@ -336,6 +345,59 @@ class SettingsManager {
 
         } catch (error) {
             console.error('Error deleting template:', error);
+            this.showToast(error.message, 'error');
+        }
+    }
+
+    // Analysis Configuration Methods
+    showAnalysisConfigModal() {
+        this.loadAnalysisConfigData();
+        this.showModal(this.analysisConfigModal);
+    }
+
+    async loadAnalysisConfigData() {
+        try {
+            const data = await this.apiRequest('/api/analysis-config/');
+            
+            document.getElementById('wordGroupThreshold').value = data.word_group_threshold;
+            
+            // Update the preview text
+            const thresholdPreview = document.getElementById('thresholdPreview');
+            if (thresholdPreview) {
+                thresholdPreview.textContent = data.word_group_threshold;
+            }
+            const thresholdPreview2 = document.getElementById('thresholdPreview2');
+            if (thresholdPreview2) {
+                thresholdPreview2.textContent = data.word_group_threshold;
+            }
+
+        } catch (error) {
+            console.error('Error loading analysis config:', error);
+            this.showToast('Failed to load analysis configuration', 'error');
+        }
+    }
+
+    async handleAnalysisConfigSubmit(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this.analysisConfigForm);
+        const data = Object.fromEntries(formData.entries());
+
+        // Convert to integer
+        data.word_group_threshold = parseInt(data.word_group_threshold);
+
+        try {
+            const result = await this.apiRequest('/api/analysis-config/', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            this.showToast(result.message, 'success');
+            this.closeModal(this.analysisConfigModal);
+            this.refreshPage();
+
+        } catch (error) {
+            console.error('Error saving analysis config:', error);
             this.showToast(error.message, 'error');
         }
     }

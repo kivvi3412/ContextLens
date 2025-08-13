@@ -80,12 +80,16 @@ class ContextLens {
         this.isAnalyzing = false;
         this.selectionTimeout = null; // For delayed text selection processing
         this.analysisBuffer = ''; // Buffer for streaming markdown content
+        this.analysisConfig = null; // Cache for analysis configuration
 
         // Initialize collapsed states from localStorage
         this.loadCollapsedStates();
         
         // Load persisted input text
         this.loadInputText();
+        
+        // Load analysis configuration
+        this.loadAnalysisConfig();
     }
 
     bindEvents() {
@@ -196,9 +200,14 @@ class ContextLens {
         const allText = this.inputText.value.trim();
         if (!allText || this.isAnalyzing) return;
 
-        // 判断是单词/短语还是句子
+        // Ensure we have analysis config loaded
+        if (!this.analysisConfig) {
+            await this.loadAnalysisConfig();
+        }
+
+        // 使用配置的阈值判断是单词/短语还是句子
         const wordCount = selectedText.split(/\s+/).filter(word => word.length > 0).length;
-        const isWord = wordCount <= 4;
+        const isWord = wordCount <= this.analysisConfig.word_group_threshold;
         const analysisType = isWord ? '词汇分析' : '句子分析';
         
         // 更新分析标题
@@ -509,6 +518,27 @@ class ContextLens {
     
     clearInputText() {
         localStorage.removeItem('contextlens_input_text');
+    }
+
+    async loadAnalysisConfig() {
+        try {
+            const response = await fetch('/api/analysis-config/');
+            if (response.ok) {
+                this.analysisConfig = await response.json();
+            } else {
+                console.warn('Failed to load analysis configuration, using defaults');
+                this.analysisConfig = {
+                    word_group_threshold: 4,
+                    sentence_threshold: 20
+                };
+            }
+        } catch (error) {
+            console.error('Error loading analysis configuration:', error);
+            this.analysisConfig = {
+                word_group_threshold: 4,
+                sentence_threshold: 20
+            };
+        }
     }
 }
 

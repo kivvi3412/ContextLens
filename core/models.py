@@ -68,3 +68,31 @@ class UserSession(models.Model):
 
     def __str__(self):
         return f"Session {self.session_id}"
+
+
+class AnalysisConfiguration(models.Model):
+    word_group_threshold = models.IntegerField(
+        default=4,
+        help_text="Number of words or fewer that constitute a word group (vs sentence)"
+    )
+    sentence_threshold = models.IntegerField(
+        default=20,
+        help_text="Number of words or more that constitute a sentence for analysis purposes"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Analysis Configuration"
+        verbose_name_plural = "Analysis Configurations"
+
+    def __str__(self):
+        return f"Word Group: ≤{self.word_group_threshold} words, Sentence: ≥{self.sentence_threshold} words"
+
+    @classmethod
+    def get_current(cls):
+        """Get the current analysis configuration, create default if none exists"""
+        config = cls.objects.first()
+        if not config:
+            config = cls.objects.create()
+        return config
